@@ -21,7 +21,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(2, PIN, NEO_GRB + NEO_KHZ800);
 char newData = 0;
 char dropDriveState = 0;
 void setup() {
-  Serial.begin(9600);   // Start Serial @ 9600 baud
+  Serial.begin(115200);   // Start Serial @ 9600 baud
   Serial.flush();       // Clear  buffer
   strip.begin(); // Start neopixel library
   strip.show(); // Initialize all pixels to 'off'
