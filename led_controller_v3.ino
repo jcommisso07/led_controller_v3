@@ -13,7 +13,7 @@
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(2, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(40, PIN, NEO_GRB + NEO_KHZ800);
 
 
 // white is vertical
@@ -36,8 +36,9 @@ void loop() {
 
       case 'a':                        // Idle vertical
         //idleV();
+        rainbowCycle(20);
         Serial.println("IDLE-VERT-TESTING");
-        strip.setPixelColor(0, 255, 0, 0);
+       // strip.setPixelColor(0, 255, 0, 0);
         strip.show();
         break;
 
@@ -81,7 +82,7 @@ void loop() {
 
       case 'e':                        // Drop Drive Down
         //dropDrive();
-        Serial.println("DRIVE-TdESTING");
+        Serial.println("DRIVE-TESTING");
         dropDriveState = 1; // allows the others to use the horizontal strip for drop drive while drop drive is active
         strip.setPixelColor(0, 255, 255, 255);
         strip.show();
@@ -118,12 +119,42 @@ void loop() {
 
       case 'i':                        // Off
           Serial.println("OFF-TESTING");
+
+          
           break;
 
 
         default:
-          Serial.print("Error: Unexpected command");
+          Serial.println("Error: Unexpected command");
       }
     }
+
+    
   }
 
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    for(i=0; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
