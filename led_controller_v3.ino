@@ -1,19 +1,10 @@
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-#include <avr/power.h>
-#endif
+#include <FastLED.h>
+#define NUM_LEDS 40
+#define DATA_PIN 3
 
-#define PIN 6
 
-// Parameter 1 = number of pixels in strip
-// Parameter 2 = Arduino pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(40, PIN, NEO_GRB + NEO_KHZ800);
+CRGB leds[NUM_LEDS];
+
 
 
 // white is vertical
@@ -21,10 +12,10 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(40, PIN, NEO_GRB + NEO_KHZ800);
 char newData = 0;
 char dropDriveState = 0;
 void setup() {
-  Serial.begin(115200);   // Start Serial @ 9600 baud
+  Serial.begin(115200);   // Start Serial @ 115200 baud
   Serial.flush();       // Clear  buffer
-  strip.begin(); // Start neopixel library
-  strip.show(); // Initialize all pixels to 'off'
+
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 }
 
 void loop() {
@@ -35,126 +26,165 @@ void loop() {
     switch (newData) {
 
       case 'a':                        // Idle vertical
-        //idleV();
-        rainbowCycle(20);
+        idleV(20);
         Serial.println("IDLE-VERT-TESTING");
-       // strip.setPixelColor(0, 255, 0, 0);
-        strip.show();
+        FastLED.show();
         break;
 
 
       case 'b':  //Idle horizontal
-        //idleH();
+        idleH(20);
         Serial.println("IDLE-HORIZ-TESTING");
-        strip.setPixelColor(0, 0, 255, 0);
-        strip.show();
+        FastLED.show();
         break;
 
       case 'c':                        // Intake
-        //intake();
         Serial.println("INTAKE-TESTING");
-        //intake dd and norm
         if (dropDriveState == 1) {
-          strip.setPixelColor(0, 255, 0, 0);
-          strip.show();
+           RunningLights(0xff,0xff,0xff, 50);  // white
+          FastLED.show();
         } else {
-          strip.setPixelColor(0, 0, 0, 255);
-          strip.show();
+           RunningLights(0xff,0,0, 50);        // red
+          FastLED.show();
         }
         break;
 
 
 
       case 'd':                        // Deploy
-        //deploy();
         Serial.println("DEPLOY-TESTING");
-        //we need an deploy dd and norm
         if (dropDriveState == 1) {
-          strip.setPixelColor(0, 255, 155, 0);
-          strip.show();
+          //deployDD();
+          FastLED.show();
         } else {
-          strip.setPixelColor(0, 99, 0, 255);
-          strip.show();
+          deploy();          FastLED.show();
         }
         break;
 
 
 
       case 'e':                        // Drop Drive Down
-        //dropDrive();
+        dropDrive();
         Serial.println("DRIVE-TESTING");
         dropDriveState = 1; // allows the others to use the horizontal strip for drop drive while drop drive is active
-        strip.setPixelColor(0, 255, 255, 255);
-        strip.show();
+        FastLED.show();
 
         break;
 
 
 
       case 'f':                        // Drop Drive Up
-        //dropDrive();
         Serial.println("DRIVE-UP-TESTING");
         dropDriveState = 0; // gives full access to the horizontal strip while drop drive is inactive
+        prevoiusState();
         break;
 
 
 
       case 'g':                        // Elevator Up
-        //elev();
+        elev();
         Serial.println("ELEV-TESTING");
-
-        strip.setPixelColor(1, 0, 255, 255);
-        strip.show();
+        FastLED.show();
 
         break;
 
 
       case 'h':                        // Winch
-        //winch();
+        winch();
         Serial.println("WINCH-TESTING");
-        strip.setPixelColor(1, 0, 0, 255);
-        strip.show();
+        FastLED.show();
         break;
 
 
       case 'i':                        // Off
-          Serial.println("OFF-TESTING");
-
-          
-          break;
+        Serial.println("OFF-TESTING");
 
 
-        default:
-          Serial.println("Error: Unexpected command");
-      }
+        break;
+
+
+      default:
+        Serial.println("Error: Unexpected command");
     }
-
-    
   }
 
-void rainbowCycle(uint8_t wait) {
+
+}
+
+void idleH(int SpeedDelay) {
+  byte *c;
   uint16_t i, j;
 
   for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-    for(i=0; i< strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    for(i=0; i< 10; i++) {
+      c=Wheel(((i * 256 / NUM_LEDS) + j) & 255);
+      setPixel(i, *c, *(c+1), *(c+2));
     }
-    strip.show();
-    delay(wait);
+    showStrip();
+    delay(SpeedDelay);
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
+
+
+void idleH(int SpeedDelay) {
+  byte *c;
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    for(i=11; i< 28; i++) {
+      c=Wheel(((i * 256 / NUM_LEDS) + j) & 255);
+      setPixel(i, *c, *(c+1), *(c+2));
+    }
+    showStrip();
+    delay(SpeedDelay);
+  }
+}
+
+
+
+
+
+byte * Wheel(byte WheelPos) {
+  static byte c[3];
+  
   if(WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+   c[0]=WheelPos * 3;
+   c[1]=255 - WheelPos * 3;
+   c[2]=0;
+  } else if(WheelPos < 170) {
+   WheelPos -= 85;
+   c[0]=255 - WheelPos * 3;
+   c[1]=0;
+   c[2]=WheelPos * 3;
+  } else {
+   WheelPos -= 170;
+   c[0]=0;
+   c[1]=WheelPos * 3;
+   c[2]=255 - WheelPos * 3;
   }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+
+  return c;
+}
+
+
+void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
+  int Position=0;
+  
+  for(int i=0; i<NUM_LEDS*2; i++)
+  {
+      Position++; // = 0; //Position + Rate;
+      for(int i=0; i<10; i++) {
+        // sine wave, 3 offset waves make a rainbow!
+        //float level = sin(i+Position) * 127 + 128;
+        //setPixel(i,level,0,0);
+        //float level = sin(i+Position) * 127 + 128;
+        setPixel(i,((sin(i+Position) * 127 + 128)/255)*red,
+                   ((sin(i+Position) * 127 + 128)/255)*green,
+                   ((sin(i+Position) * 127 + 128)/255)*blue);
+      }
+      
+      showStrip();
+      delay(WaveDelay);
   }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
