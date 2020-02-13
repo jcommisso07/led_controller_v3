@@ -32,8 +32,7 @@ void ledSwitch() {
     case 'd':
       Serial.println("disabled");
       disabled();
-      break;s
-      
+      break;
     case 'i':
       Serial.println("idle");
       idle(25);
